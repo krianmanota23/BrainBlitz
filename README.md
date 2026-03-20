@@ -1,59 +1,62 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ⚡ BrainBlitz: Ultimate Quiz Arena
+### Assumption College of Davao - Multiplayer Battle Engine
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+BrainBlitz is a real-time, high-stakes multiplayer quiz bowl system built for large-scale auditorium engagement. Designed with a deep dark aesthetic and glassmorphism effects, it turns any curriculum into a cinematic battle experience.
 
-## About Laravel
+## 🚀 Deployment Instructions
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+To launch the arena, you must have 3 terminal sessions running simultaneously on your host machine:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Terminal 1: Application Server
+Handle HTTP requests and serve the Blade interface.
+```bash
+php artisan serve
+```
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Terminal 2: Reverb Relay (WebSockets)
+Powers the real-time synchronization between the Admin, TV, and Students.
+```bash
+php artisan reverb:start
+```
 
-## Learning Laravel
+### Terminal 3: Tactical Worker (Queues)
+Handles background processing for score calculations and state updates.
+```bash
+php artisan queue:work
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+---
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+## 🏗️ Hardware Configuration
+1. **Admin Laptop**: Connect to the local network and open the Dashboard.
+2. **HDMI Display / TV**: Connect to the Admin Laptop. Open the **TV Display URL** and drag it to the secondary monitor. Press `F11` for true fullscreen immersion.
+3. **Student Devices**: Any smartphone or tablet with a browser connected to the same network.
 
-## Laravel Sponsors
+---
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## 🎮 Battle Protocol (How to Play)
+1. **Host Login**: Use the Master Credentials provided below to access the Command Center.
+2. **Terrain Construction**: Create **Topics** and craft a **Quiz**.
+3. **Initiation**: Launch the Quiz to create a **Room Code**.
+4. **Entrance**: Instruct students to visit `[APP_URL]/student/join` and enter the 6-character code.
+5. **Engagement**: The Admin controls the flow (Start Game, Next Question). The **TV Arena** updates automatically.
+6. **Victory**: Final scores and the top 3 podium are revealed on the TV at the end of the session.
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🔑 Master Credentials
+- **Role**: Admin
+- **Username**: `admin`
+- **Password**: `admin1234`
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 🛠️ Tech Stack & Requirements
+- **Framework**: Laravel 12
+- **Real-time**: Laravel Reverb + Echo
+- **Frontend**: Alpine.js + Tailwind CSS
+- **Database**: MySQL 8.0+
+- **Font**: Outfit (Google Fonts)
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+*Created with cinematic precision for the Assumption College of Davao.*
