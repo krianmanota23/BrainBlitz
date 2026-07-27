@@ -29,6 +29,7 @@ use App\Http\Controllers\Admin\RoomController;
 // Admin Routes
 Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/history', [\App\Http\Controllers\Admin\HistoryController::class, 'index'])->name('history');
 
     // Topic Routes
     Route::resource('topics', TopicController::class)->except(['show']);
@@ -46,8 +47,12 @@ Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function ()
 
     // Room Routes
     Route::post('/quizzes/{quizId}/launch', [RoomController::class, 'launch'])->name('quizzes.launch');
+    Route::get('/quizzes/{quizId}/launch', fn($quizId) => redirect()->route('admin.quizzes.show', $quizId));
+    
     Route::get('/rooms/{roomId}/lobby', [RoomController::class, 'lobby'])->name('rooms.lobby');
     Route::post('/rooms/{roomId}/start', [RoomController::class, 'startGame'])->name('rooms.start');
+    Route::get('/rooms/{roomId}/start', fn($roomId) => redirect()->route('admin.rooms.lobby', $roomId));
+    
     Route::get('/rooms/{roomId}/participants', [RoomController::class, 'getParticipants'])->name('rooms.participants');
     
     // Active Game Routes (Phase 6)

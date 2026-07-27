@@ -82,7 +82,7 @@
                             <div class="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">⚔️</div>
                             <div>
                                 <p class="text-lg font-black uppercase italic tracking-tighter text-white group-hover:text-gradient">{{ $game->room->quiz->title }}</p>
-                                <p class="text-[9px] font-black text-gray-600 uppercase tracking-widest mt-1">{{ $game->joined_at->format('M d, Y') }}</p>
+                                <p class="text-[9px] font-black text-gray-600 uppercase tracking-widest mt-1">{{ \Illuminate\Support\Carbon::parse($game->joined_at)->format('M d, Y') }}</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-8 w-full sm:w-auto justify-between sm:justify-end">

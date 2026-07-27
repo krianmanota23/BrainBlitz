@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->integer('total_score')->default(0);
             $table->integer('rank')->default(0);
-            $table->timestamp('updated_at');
+            $table->timestamps();
         });
     }
 

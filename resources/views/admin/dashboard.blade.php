@@ -9,7 +9,7 @@
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-            <h1 class="text-6xl font-black italic tracking-tighter uppercase leading-none grow"><span class="text-gradient">BATTLE</span><br> COMMAND</h1>
+            <h1 class="text-6xl font-black italic tracking-tighter uppercase leading-tight grow"><span class="text-gradient inline-block pr-3 py-1">BATTLE</span><br> COMMAND</h1>
             <p class="text-gray-400 font-bold tracking-widest uppercase mt-4">Welcome back, <span class="text-white">Master Host</span>.</p>
         </div>
         <div class="flex items-center gap-4">

@@ -13,12 +13,14 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        User::create([
-            'full_name' => 'BrainBlitz Admin',
-            'username' => 'admin',
-            'nickname' => 'Admin',
-            'password' => 'admin1234', // Model cast 'hashed' handles hashing if set right, but many seeders hash manually
-            'role' => 'admin',
-        ]);
+        User::firstOrCreate(
+            ['username' => 'admin'],
+            [
+                'full_name' => 'BrainBlitz Admin',
+                'nickname' => 'Admin',
+                'password' => 'admin1234',
+                'role' => 'admin',
+            ]
+        );
     }
 }

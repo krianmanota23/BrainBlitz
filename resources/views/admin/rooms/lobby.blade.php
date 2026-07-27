@@ -85,13 +85,19 @@
 
     <!-- HUGE ROOM CODE CENTER -->
     <div class="flex-1 flex flex-col items-center justify-center space-y-8 animate-in fade-in zoom-in duration-700">
-        <div class="text-center space-y-4">
-            <p class="text-gray-400 font-black uppercase tracking-[0.4em] text-sm">Join at <span class="text-white">BrainBlitz.app</span> using code:</p>
-            <div class="card p-12 px-24 rounded-[3rem] shadow-[0_0_100px_rgba(168,85,247,0.2)] border-purple-500/30 relative group">
-                <div class="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-pink-600/5 rounded-[3rem]"></div>
-                <h2 class="text-[120px] font-mono font-black tracking-[0.2em] text-white leading-none group-hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_20px_rgba(168,85,247,0.5)]">
+        <div class="text-center space-y-4" x-data="{ lobbyCopied: false }">
+            <p class="text-gray-400 font-black uppercase tracking-[0.4em] text-sm">Join at <span class="text-white">BrainBlitz</span> using code:</p>
+            
+            <div @click="navigator.clipboard.writeText('{{ $room->room_code }}'); lobbyCopied = true; setTimeout(() => lobbyCopied = false, 2500)"
+                 class="card p-10 px-20 rounded-[3rem] shadow-[0_0_100px_rgba(168,85,247,0.3)] border-purple-500/40 hover:border-purple-400 relative group cursor-pointer active:scale-95 transition-all transform select-none">
+                <div class="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-pink-600/10 rounded-[3rem]"></div>
+                <h2 class="text-[120px] font-mono font-black tracking-[0.2em] text-white leading-none group-hover:text-purple-300 transition-colors duration-300 drop-shadow-[0_0_30px_rgba(168,85,247,0.6)]">
                     {{ $room->room_code }}
                 </h2>
+                <div class="mt-4 text-center">
+                    <span x-show="!lobbyCopied" class="text-xs font-black uppercase tracking-widest text-purple-400 group-hover:text-white transition-colors">📋 Click code to instant copy</span>
+                    <span x-show="lobbyCopied" x-cloak class="text-xs font-black uppercase tracking-widest text-green-400 bg-green-500/10 px-4 py-1.5 rounded-lg border border-green-500/30">✓ COPIED TO CLIPBOARD!</span>
+                </div>
             </div>
             <p class="text-purple-400 font-bold uppercase tracking-widest text-lg animate-pulse mt-8 italic">Waiting for the squad to assemble...</p>
         </div>

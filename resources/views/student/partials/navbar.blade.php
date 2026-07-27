@@ -19,34 +19,52 @@
 
             <!-- Profile & Menu -->
             <div class="flex items-center space-x-6">
-                <div class="hidden md:flex items-center space-x-4">
-                    <div class="text-right">
-                        <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Blitz Hunter</p>
-                        <p class="text-xs font-black italic text-white uppercase">{{ Auth::user()->nickname }}</p>
-                    </div>
-                    
+                <div class="hidden md:flex items-center">
                     <div class="relative">
-                        <button @click="profileOpen = !profileOpen" class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors overflow-hidden">
-                             <div class="w-full h-full flex items-center justify-center text-xs font-black italic uppercase text-purple-400 bg-purple-400/10">
+                        <!-- Profile Trigger Button -->
+                        <button @click="profileOpen = !profileOpen" 
+                                @keydown.escape="profileOpen = false"
+                                type="button"
+                                class="flex items-center space-x-3 p-2 px-3.5 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all duration-200 cursor-pointer group focus:outline-none focus:ring-2 focus:ring-purple-500/50">
+                            <div class="text-right">
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest group-hover:text-purple-300 transition-colors">Blitz Hunter</p>
+                                <p class="text-xs font-black italic text-white uppercase group-hover:text-purple-400 transition-colors">{{ Auth::user()->nickname }}</p>
+                            </div>
+                            
+                            <div class="w-9 h-9 rounded-xl bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-xs font-black italic uppercase text-purple-300 group-hover:scale-105 group-hover:border-purple-400 transition-all shadow-md">
                                 {{ substr(Auth::user()->nickname, 0, 1) }}
-                             </div>
+                            </div>
+
+                            <!-- Dropdown Chevron Arrow -->
+                            <svg class="w-4 h-4 text-gray-400 group-hover:text-white transition-transform duration-200" 
+                                 :class="{ 'rotate-180 text-purple-400': profileOpen }" 
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                            </svg>
                         </button>
 
-                        <!-- Dropdown -->
+                        <!-- Dropdown Menu -->
                         <div x-show="profileOpen" 
+                             x-cloak
                              @click.away="profileOpen = false"
-                             x-transition:enter="transition ease-out duration-100 transform"
-                             x-transition:enter-start="opacity-0 scale-95"
-                             x-transition:enter-end="opacity-100 scale-100"
-                             x-transition:leave="transition ease-in duration-75 transform"
-                             x-transition:leave-start="opacity-100 scale-100"
-                             x-transition:leave-end="opacity-0 scale-95"
-                             class="absolute right-0 mt-4 w-48 card p-2 shadow-2xl z-50 text-left">
-                            <a href="{{ route('profile') }}" class="block px-4 py-3 rounded-lg text-xs font-black uppercase tracking-widest text-gray-400 hover:bg-white/5 hover:text-white transition-all italic">Profile Sync</a>
-                            <div class="h-px bg-white/5 my-2"></div>
+                             x-transition:enter="transition ease-out duration-150 transform"
+                             x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                             x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave="transition ease-in duration-100 transform"
+                             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                             x-transition:leave-end="opacity-0 scale-95 -translate-y-2"
+                             class="absolute right-0 mt-3 w-52 card p-2.5 rounded-2xl shadow-2xl z-50 text-left border border-white/10 bg-[#16162a]/95 backdrop-blur-xl">
+                            <a href="{{ route('profile') }}" class="flex items-center space-x-3 px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-gray-300 hover:bg-purple-500/10 hover:text-white transition-all italic">
+                                <span class="text-sm">👤</span>
+                                <span>Profile Sync</span>
+                            </a>
+                            <div class="h-px bg-white/10 my-1.5"></div>
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
-                                <button type="submit" class="w-full text-left px-4 py-3 rounded-lg text-xs font-black uppercase tracking-widest text-red-500/60 hover:bg-red-500/10 hover:text-red-500 transition-all italic">Exit Arena</button>
+                                <button type="submit" class="w-full flex items-center space-x-3 text-left px-4 py-3 rounded-xl text-xs font-black uppercase tracking-widest text-red-400 hover:bg-red-500/15 hover:text-red-300 transition-all italic cursor-pointer">
+                                    <span class="text-sm">🚪</span>
+                                    <span>Exit Arena</span>
+                                </button>
                             </form>
                         </div>
                     </div>

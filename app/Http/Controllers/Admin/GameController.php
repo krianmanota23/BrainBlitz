@@ -208,7 +208,7 @@ class GameController extends Controller
         if (!$questionId) return ['red' => 0, 'blue' => 0, 'yellow' => 0, 'green' => 0, 'total' => 0];
 
         $counts = Answer::where('room_id', $roomId)
-            ->where('question_id', $questionId)
+            ->where('answers.question_id', $questionId)
             ->join('options', 'answers.option_id', '=', 'options.id')
             ->selectRaw('options.color, count(*) as count')
             ->groupBy('options.color')

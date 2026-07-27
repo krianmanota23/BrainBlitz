@@ -56,8 +56,17 @@
         </div>
     </div>
 
+    <!-- Pumping Scroll Down Indicator -->
+    <div class="flex flex-col items-center justify-center py-6 animate-bounce select-none">
+        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400 mb-2 italic">Scroll Down For Challenge Recap & Squad Rankings</span>
+        <div class="w-8 h-12 rounded-full border-2 border-purple-500/50 flex items-start justify-center p-2 shadow-[0_0_20px_rgba(168,85,247,0.4)]">
+            <div class="w-2 h-3 bg-gradient-to-b from-purple-400 to-pink-500 rounded-full animate-pulse"></div>
+        </div>
+        <svg class="w-5 h-5 text-purple-400 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19 9l-7 7-7-7"></path></svg>
+    </div>
+
     <!-- Question Breakdown List -->
-    <div class="max-w-4xl mx-auto w-full space-y-8 pt-12">
+    <div class="max-w-4xl mx-auto w-full space-y-8 pt-6">
         <h3 class="text-3xl font-black italic tracking-tighter uppercase text-white grow border-l-4 border-purple-500 pl-6">CHALLENGE <span class="text-gradient">RECAP</span></h3>
         <div class="grid grid-cols-1 gap-4">
             @foreach($room->quiz->questions->sortBy('order_number') as $q)
@@ -75,7 +84,7 @@
                         <div>
                             <p class="text-sm font-black text-white uppercase tracking-tighter mb-1">{{ Str::limit($q->question_text, 40) }}</p>
                             @if($ans)
-                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Selected: <span class="text-white">{{ $ans->option->option_text }}</span></p>
+                                <p class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Selected: <span class="text-white">{{ $ans->option?->option_text ?? 'N/A' }}</span></p>
                             @else
                                 <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest">No Response</p>
                             @endif

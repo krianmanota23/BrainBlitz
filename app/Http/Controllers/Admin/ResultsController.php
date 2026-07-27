@@ -13,17 +13,14 @@ class ResultsController extends Controller
 {
     public function show($roomId)
     {
+        Score::syncForRoom($roomId);
+
         $room = Room::with(['quiz.questions.options', 'scores.user', 'participants.user'])->findOrFail($roomId);
         
-        // Ensure scores are ranked
         $scores = Score::where('room_id', $roomId)
             ->with('user')
             ->orderBy('total_score', 'desc')
             ->get();
-
-        foreach ($scores as $index => $score) {
-            $score->update(['rank' => $index + 1]);
-        }
 
         // Stats per question
         $questionStats = [];
@@ -32,7 +29,7 @@ class ResultsController extends Controller
             $correctAnswers = Answer::where('room_id', $roomId)->where('question_id', $question->id)->where('is_correct', true)->count();
             
             $mostChosen = Answer::where('room_id', $roomId)
-                ->where('question_id', $question->id)
+                ->where('answers.question_id', $question->id)
                 ->join('options', 'answers.option_id', '=', 'options.id')
                 ->selectRaw('options.color, options.option_text, count(*) as count')
                 ->groupBy('options.color', 'options.option_text')

@@ -24,8 +24,10 @@ class ResultsController extends Controller
             return redirect()->route('student.join')->with('error', 'You were not a participant in this game.');
         }
 
+        Score::syncForRoom($roomId);
+
         $myScore = Score::where('room_id', $roomId)->where('user_id', Auth::id())->first();
-        $myAnswers = Answer::where('room_id', $roomId)->where('user_id', Auth::id())->get();
+        $myAnswers = Answer::with('option')->where('room_id', $roomId)->where('user_id', Auth::id())->get();
         
         $correctCount = $myAnswers->where('is_correct', true)->count();
         $totalQuestions = $room->quiz->questions->count();

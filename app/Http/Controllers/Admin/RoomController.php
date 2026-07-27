@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Events\GameStarted;
+use App\Events\QuestionStarted;
 use App\Http\Controllers\Controller;
 use App\Models\Quiz;
 use App\Models\Room;
@@ -19,36 +20,34 @@ class RoomController extends Controller
             return back()->with('error', 'Quiz is currently waiting or ongoing.');
         }
 
-        if ($quiz->questions_count === 0) {
-            return back()->with('error', 'Cannot start a quiz with no questions');
+        if ($quiz->questions_count == 0) {
+            return back()->with('error', 'Cannot launch an empty arena. Please add questions first.');
         }
 
-        // Check for existing waiting/ongoing room
-        $existingRoom = Room::where('quiz_id', $quizId)
-            ->whereIn('status', ['waiting', 'ongoing'])
-            ->exists();
-
-        if ($existingRoom) {
-            return back()->with('error', 'An active room already exists for this quiz.');
-        }
+        // Generate unique 6-character uppercase code
+        do {
+            $code = strtoupper(\Illuminate\Support\Str::random(6));
+        } while (Room::where('room_code', $code)->where('status', '!=', 'finished')->exists());
 
         $room = Room::create([
             'quiz_id' => $quiz->id,
-            'room_code' => $quiz->room_code,
+            'room_code' => $code,
             'status' => 'waiting',
-            'current_question' => 0,
         ]);
 
-        $quiz->update(['status' => 'waiting']);
+        $quiz->update([
+            'status' => 'waiting',
+            'room_code' => $code,
+        ]);
 
-        return redirect()->route('admin.rooms.lobby', $room->id)->with('success', 'Arena launched! Waiting for players...');
+        return redirect()->route('admin.rooms.lobby', $room->id)->with('success', 'Arena launched successfully!');
     }
 
     public function lobby($roomId)
     {
         $room = Room::with(['quiz', 'participants.user'])->findOrFail($roomId);
         
-        if ($room->status === 'ongoing') {
+        if ($room->status !== 'waiting') {
             return redirect()->route('admin.game.show', $room->id);
         }
         
@@ -57,7 +56,7 @@ class RoomController extends Controller
 
     public function startGame($roomId)
     {
-        $room = Room::with(['quiz', 'participants'])->findOrFail($roomId);
+        $room = Room::with(['quiz.questions.options', 'participants'])->findOrFail($roomId);
 
         if ($room->status !== 'waiting') {
             return back()->with('error', 'Game has already started.');
@@ -73,25 +72,33 @@ class RoomController extends Controller
             return back()->with('error', 'Participant limit exceeded.');
         }
 
+        $firstQuestion = $room->quiz->questions->where('order_number', 1)->first();
+        $totalQuestions = $room->quiz->questions->count();
+
         $room->update([
             'status' => 'ongoing',
             'started_at' => now(),
+            'current_question' => 1,
+            'question_started_at' => now(),
         ]);
 
         $room->quiz->update(['status' => 'ongoing']);
 
-        // Create score records for all participants
-        foreach ($room->participants as $participant) {
-            Score::firstOrCreate([
-                'room_id' => $room->id,
-                'user_id' => $participant->user_id,
-            ], [
-                'total_score' => 0,
-                'rank' => 0,
-            ]);
-        }
+        Score::syncForRoom($room->id);
 
         broadcast(new GameStarted($room->id));
+
+        if ($firstQuestion) {
+            \App\Models\RoomParticipant::where('room_id', $room->id)->update(['is_ready' => false]);
+
+            broadcast(new QuestionStarted(
+                $room->id,
+                $firstQuestion,
+                1,
+                $totalQuestions,
+                $firstQuestion->time_limit
+            ));
+        }
 
         return redirect()->route('admin.game.show', $room->id)->with('success', 'The Blitz has begun!');
     }

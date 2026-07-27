@@ -38,7 +38,11 @@
         @endforeach
     </div>
 
-    @if($quiz->questions_count == 0)
+    @php
+        $qCount = $quiz->questions_count ?? $quiz->questions->count();
+    @endphp
+
+    @if($qCount == 0)
     <div class="w-full p-6 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl flex items-center space-x-6 animate-pulse">
         <span class="text-3xl">⚠️</span>
         <div>
@@ -68,30 +72,43 @@
             </div>
         </div>
 
-        @if($quiz->status == 'draft' && $quiz->questions_count > 0)
-            <div x-data="{ confirmingLaunch: false }">
-                <button @click="confirmingLaunch = true" class="px-12 py-6 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-black text-xl tracking-tighter uppercase shadow-[0_0_40px_rgba(22,163,74,0.3)] hover:scale-105 transform transition-all">
+        @if($quiz->status == 'draft' && $qCount > 0)
+            <div x-data="{ confirmingLaunch: false, modalCopied: false }">
+                <button @click="confirmingLaunch = true" class="px-12 py-6 rounded-2xl bg-green-600 hover:bg-green-500 text-white font-black text-xl tracking-tighter uppercase shadow-[0_0_40px_rgba(22,163,74,0.3)] hover:scale-105 transform transition-all cursor-pointer">
                     🚀 Launch Game &rarr;
                 </button>
 
                 <template x-if="confirmingLaunch">
                     <div class="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-6 backdrop-blur-md" @click.self="confirmingLaunch = false">
-                        <div class="card p-12 rounded-[3rem] w-full max-w-lg shadow-2xl text-center border-green-500/30">
-                            <div class="text-6xl mb-4">🚀</div>
-                            <h3 class="text-4xl font-black uppercase text-green-400 italic tracking-tighter mb-4">Launch this quiz?</h3>
-                            <p class="text-gray-400 font-bold mb-10 text-sm">Students will be able to join using code <span class="text-white font-mono border-b border-white">{{ $quiz->room_code }}</span>.</p>
-                            <div class="flex space-x-4">
-                                <button @click="confirmingLaunch = false" class="flex-1 px-8 py-5 rounded-xl border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px] text-white">Cancel</button>
+                        <div class="card p-10 rounded-[3rem] w-full max-w-md shadow-2xl text-center border-green-500/30">
+                            <div class="text-6xl mb-3">🚀</div>
+                            <h3 class="text-3xl font-black uppercase text-green-400 italic tracking-tighter mb-2">Launch this quiz?</h3>
+                            <p class="text-gray-400 font-bold text-xs uppercase tracking-wider mb-4">Students will join using code:</p>
+                            
+                            <!-- Big Click-To-Copy Code Box -->
+                            <div @click="navigator.clipboard.writeText('{{ $quiz->room_code }}'); modalCopied = true; setTimeout(() => modalCopied = false, 2500)" 
+                                 class="my-4 bg-purple-500/10 border-2 border-purple-500/40 hover:border-purple-400 p-5 rounded-2xl cursor-pointer group transition-all transform hover:scale-105 active:scale-95 shadow-xl select-none">
+                                <span class="text-5xl font-mono font-black tracking-[0.25em] text-white group-hover:text-purple-300 transition-colors uppercase block">
+                                    {{ $quiz->room_code }}
+                                </span>
+                                <div class="mt-2 text-[10px] font-black uppercase tracking-widest text-purple-400 group-hover:text-white">
+                                    <span x-show="!modalCopied">📋 Click to instant copy</span>
+                                    <span x-show="modalCopied" x-cloak class="text-green-400 font-bold bg-green-500/10 px-3 py-1 rounded-md border border-green-500/30">✓ COPIED TO CLIPBOARD!</span>
+                                </div>
+                            </div>
+
+                            <div class="flex space-x-4 mt-6">
+                                <button @click="confirmingLaunch = false" class="flex-1 px-6 py-4 rounded-xl border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-xs text-white">Cancel</button>
                                 <form action="{{ route('admin.quizzes.launch', $quiz->id) }}" method="POST" class="flex-1">
                                     @csrf
-                                    <button type="submit" class="w-full px-8 py-5 rounded-xl bg-green-600 hover:bg-green-500 font-black uppercase tracking-widest text-[10px] text-white shadow-lg">Yes, Launch!</button>
+                                    <button type="submit" class="w-full px-6 py-4 rounded-xl bg-green-600 hover:bg-green-500 font-black uppercase tracking-widest text-xs text-white shadow-lg">Yes, Launch!</button>
                                 </form>
                             </div>
                         </div>
                     </div>
                 </template>
             </div>
-        @elseif($quiz->status == 'draft' && $quiz->questions_count == 0)
+        @elseif($quiz->status == 'draft' && $qCount == 0)
             <div class="relative group">
                 <button disabled class="px-12 py-6 rounded-2xl bg-gray-700 text-gray-400 font-black text-xl tracking-tighter uppercase cursor-not-allowed opacity-50">
                     🚀 Launch Game
@@ -122,18 +139,18 @@
                          </div>
                      </div>
                  </template>
-             </div>
+              </div>
         @endif
 
         <!-- Room Code Spotlight -->
         <div class="card p-8 rounded-3xl flex flex-col items-center text-center shadow-2xl border-purple-500/30 relative overflow-hidden">
              <div class="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-pink-600/5 pointer-events-none"></div>
-             <div @click="copyCode('{{ $quiz->room_code }}')" class="cursor-pointer group relative z-10">
+             <div @click="copyCode('{{ $quiz->room_code }}')" class="cursor-pointer group relative z-10 select-none">
                  <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 block">Invite Command Code</span>
-                 <p class="text-6xl font-mono font-black tracking-[0.2em] text-white group-hover:text-purple-400 transition-colors uppercase select-none">{{ $quiz->room_code }}</p>
+                 <p class="text-7xl md:text-8xl font-mono font-black tracking-[0.25em] text-white group-hover:text-purple-400 transition-colors uppercase active:scale-95 transform transition-transform">{{ $quiz->room_code }}</p>
                  <div class="mt-4 flex flex-col items-center">
-                    <span class="text-[9px] font-bold text-gray-600 uppercase tracking-widest group-hover:text-gray-400 transition-all italic">Click to clone to clipboard</span>
-                    <div x-show="copied" x-transition class="mt-2 text-[10px] font-black text-green-500 uppercase tracking-widest">COPIED SUCCESSFULLY! ✓</div>
+                    <span x-show="!copied" class="text-[10px] font-bold text-purple-400 group-hover:text-white transition-all uppercase tracking-widest italic">📋 Click to instant copy code</span>
+                    <div x-show="copied" x-transition class="mt-2 text-xs font-black text-green-400 uppercase tracking-widest bg-green-500/10 px-4 py-1.5 rounded-lg border border-green-500/30">COPIED TO CLIPBOARD! ✓</div>
                  </div>
              </div>
         </div>

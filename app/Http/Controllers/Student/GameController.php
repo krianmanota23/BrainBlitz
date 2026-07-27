@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use App\Models\Answer;
 use App\Models\Option;
+use App\Models\Quiz;
 use App\Models\Room;
 use App\Models\RoomParticipant;
 use App\Events\AnswerReceived;
@@ -54,19 +55,29 @@ class GameController extends Controller
 
     public function joinRoom(Request $request)
     {
+        // Sanitize pasted room code (strip spaces, newlines, special chars, and uppercase)
+        $rawCode = $request->input('room_code', '');
+        $cleanedCode = strtoupper(trim(preg_replace('/[^a-zA-Z0-9]/', '', $rawCode)));
+        $request->merge(['room_code' => $cleanedCode]);
+
         $validated = $request->validate([
             'room_code' => ['required', 'string', 'size:6'],
         ]);
 
-        $roomCode = strtoupper($validated['room_code']);
+        $roomCode = $validated['room_code'];
 
         $room = Room::with('quiz', 'participants')
             ->where('room_code', $roomCode)
-            ->where('status', 'waiting')
-             ->first();
+            ->whereIn('status', ['waiting', 'ongoing'])
+            ->first();
 
         if (!$room) {
-            return back()->with('error', 'Invalid room code or game has already started');
+            $quiz = Quiz::where('room_code', $roomCode)->first();
+            if ($quiz && $quiz->status === 'draft') {
+                return back()->with('error', 'Arena has not been launched by the host yet. Please ask your host to click "Launch Game".');
+            }
+
+            return back()->with('error', 'Invalid room code or the game has already concluded.');
         }
 
         // Check if already joined
@@ -75,12 +86,19 @@ class GameController extends Controller
             ->first();
 
         if ($existing) {
+            if ($room->status === 'ongoing') {
+                return redirect()->route('student.game', $room->id);
+            }
             return redirect()->route('student.rooms.waiting', $room->id);
+        }
+
+        if ($room->status !== 'waiting') {
+            return back()->with('error', 'The battle has already started for this arena.');
         }
 
         // Check capacity
         if ($room->participants->count() >= $room->quiz->max_participants) {
-            return back()->with('error', 'This room is full');
+            return back()->with('error', 'This arena has reached maximum capacity.');
         }
 
         RoomParticipant::create([
@@ -96,11 +114,11 @@ class GameController extends Controller
     {
         $room = Room::with(['quiz', 'participants.user'])->findOrFail($roomId);
         
-        $isParticipant = RoomParticipant::where('room_id', $roomId)
+        $participant = RoomParticipant::where('room_id', $roomId)
             ->where('user_id', Auth::id())
-            ->exists();
+            ->first();
 
-        if (!$isParticipant) {
+        if (!$participant) {
             return redirect()->route('student.join')->with('error', 'Permission denied.');
         }
 
@@ -108,7 +126,9 @@ class GameController extends Controller
             return redirect()->route('student.game', $room->id);
         }
 
-        return view('student.waiting', compact('room'));
+        $isParticipantReady = (bool) ($participant->is_ready ?? false);
+
+        return view('student.waiting', compact('room', 'isParticipantReady'));
     }
 
     public function checkRoomStatus($roomId)
@@ -118,6 +138,7 @@ class GameController extends Controller
         return response()->json([
             'status' => $room->status,
             'current_question' => $room->current_question,
+            'question_started_at' => $room->question_started_at,
             'participant_count' => $room->participants()->count(),
             'max_participants' => $room->quiz->max_participants,
         ]);
@@ -139,7 +160,33 @@ class GameController extends Controller
             return redirect()->route('student.rooms.waiting', $room->id);
         }
 
-        return view('student.game', compact('room'));
+        $currentQuestion = null;
+        if ($room->current_question > 0) {
+            $currentQuestion = $room->quiz->questions->where('order_number', $room->current_question)->first();
+        }
+
+        $alreadyAnswered = false;
+        $selectedColor = null;
+        if ($currentQuestion) {
+            $userAnswer = Answer::where('room_id', $room->id)
+                ->where('user_id', Auth::id())
+                ->where('question_id', $currentQuestion->id)
+                ->first();
+            if ($userAnswer) {
+                $alreadyAnswered = true;
+                $selectedColor = $userAnswer->option?->color;
+            }
+        }
+
+        $remainingTime = 0;
+        if ($currentQuestion && $room->question_started_at) {
+            $elapsed = \Illuminate\Support\Carbon::parse($room->question_started_at)->diffInSeconds(now());
+            $remainingTime = max(0, $currentQuestion->time_limit - $elapsed);
+        } elseif ($currentQuestion) {
+            $remainingTime = $currentQuestion->time_limit;
+        }
+
+        return view('student.game', compact('room', 'currentQuestion', 'alreadyAnswered', 'selectedColor', 'remainingTime'));
     }
 
     public function submitAnswer(Request $request, $roomId)
@@ -200,7 +247,7 @@ class GameController extends Controller
     private function calculateVoteCounts($roomId, $questionId)
     {
         $counts = Answer::where('room_id', $roomId)
-            ->where('question_id', $questionId)
+            ->where('answers.question_id', $questionId)
             ->join('options', 'answers.option_id', '=', 'options.id')
             ->selectRaw('options.color, count(*) as count')
             ->groupBy('options.color')

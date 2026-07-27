@@ -48,4 +48,14 @@ class User extends Authenticatable
             'role' => 'string',
         ];
     }
+
+    public function answers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    public function scores(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Score::class);
+    }
 }

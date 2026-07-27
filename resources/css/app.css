@@ -5,10 +5,17 @@
 
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
+[x-cloak] { display: none !important; }
+
 .text-gradient { 
     background: linear-gradient(to bottom right, #a855f7, #ec4899); 
     -webkit-background-clip: text; 
     -webkit-text-fill-color: transparent; 
+    display: inline-block;
+    padding-right: 0.15em;
+    padding-top: 0.05em;
+    margin-right: -0.15em;
+    margin-top: -0.05em;
 }
 
 .card { 

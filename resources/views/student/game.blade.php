@@ -5,7 +5,7 @@
 @section('content')
 <div class="flex-1 flex flex-col h-screen overflow-hidden bg-[#0a0a14]" 
      x-data="studentEngine()" 
-     x-init="initEcho()">
+     x-init="initEcho(); if (viewState === 'active' && timer > 0) startTimer(timer);">
 
     <!-- Header Stats -->
     <div class="px-6 py-4 flex items-center justify-between border-b border-white/5">
@@ -162,8 +162,8 @@
 function studentEngine() {
     return {
         roomId: {{ $room->id }},
-        viewState: 'ready', // ready, active, answered, result
-        timer: 0,
+        viewState: '{{ $alreadyAnswered ? 'answered' : ($room->current_question > 0 ? 'active' : 'ready') }}',
+        timer: {{ $remainingTime ?? 0 }},
         timerInterval: null,
         totalScore: 0,
         currentRank: 1,
@@ -177,10 +177,10 @@ function studentEngine() {
         totalCount: 0,
         allReady: false,
         
-        currentQuestionNum: 0,
-        questionText: '',
-        options: [],
-        selectedColor: null,
+        currentQuestionNum: {{ $room->current_question }},
+        questionText: '{!! addslashes($currentQuestion->question_text ?? '') !!}',
+        options: {!! json_encode($currentQuestion?->options ?? []) !!},
+        selectedColor: '{{ $selectedColor ?? '' }}',
 
         async fetchReadyCount() {
             try {
@@ -189,7 +189,6 @@ function studentEngine() {
                 });
                 if (!res.ok) throw new Error('Ready count fetch failed');
                 const data = await res.json();
-                console.log('Syncing Ready Count:', data);
                 this.readyCount = data.ready_count;
                 this.totalCount = data.total_count;
                 this.allReady = data.all_ready;
@@ -197,12 +196,36 @@ function studentEngine() {
         },
 
         startPolling() {
-            // Fallback polling every 5 seconds just in case WebSockets fail
-            setInterval(() => {
-                if (this.viewState === 'ready' && !this.allReady) {
-                    this.fetchReadyCount();
-                }
-            }, 5000);
+            setInterval(async () => {
+                try {
+                    if (this.viewState === 'ready') {
+                        this.fetchReadyCount();
+                    }
+
+                    const statusRes = await fetch(`{{ route('student.rooms.status', $room->id) }}`, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        
+                        if (statusData.status === 'finished') {
+                            window.location.href = `{{ route('student.rooms.results', $room->id) }}`;
+                            return;
+                        }
+
+                        if (statusData.current_question > this.currentQuestionNum) {
+                            window.location.reload();
+                            return;
+                        }
+
+                        if (this.viewState === 'ready' && statusData.current_question > 0) {
+                            window.location.reload();
+                            return;
+                        }
+                    }
+                } catch (e) {}
+            }, 2000);
         },
 
         async sendReady() {

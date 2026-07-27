@@ -10,6 +10,8 @@
          max: {{ $room->quiz->max_participants }},
          readyCount: 0,
          totalCount: {{ $room->participants->count() }},
+         isReady: {{ isset($isParticipantReady) && $isParticipantReady ? 'true' : 'false' }},
+         markingReady: false,
          async checkStatus() {
             try {
                 const res = await fetch('{{ route('student.rooms.status', $room->id) }}', {
@@ -32,54 +34,106 @@
                     window.location.href = '{{ route('student.game', $room->id) }}';
                 }
             } catch (e) { console.error(e); }
+         },
+         async toggleReady() {
+            if (this.isReady || this.markingReady) return;
+            this.markingReady = true;
+            try {
+                const res = await fetch('{{ route('student.ready', $room->id) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.isReady = true;
+                    this.readyCount = data.ready_count;
+                    this.totalCount = data.total_count;
+                }
+            } catch (e) { console.error(e); }
+            finally { this.markingReady = false; }
+         },
+         initEcho() {
+             if (window.Echo) {
+                 window.Echo.join(`room.{{ $room->id }}`)
+                     .listen('.PlayerReady', (e) => {
+                         this.readyCount = e.readyCount;
+                         this.totalCount = e.totalCount;
+                     })
+                     .listen('.GameStarted', (e) => {
+                         window.location.href = '{{ route('student.game', $room->id) }}';
+                     });
+             }
          }
      }" 
-     x-init="checkStatus(); setInterval(() => checkStatus(), 3000)">
+     x-init="checkStatus(); initEcho(); setInterval(() => checkStatus(), 3000)">
     
     <!-- Top BrainBlitz Logo -->
-    <div class="text-center mb-12">
+    <div class="text-center mb-6">
         <h1 class="text-3xl font-black italic tracking-tighter uppercase"><span class="text-gradient">BRAIN</span>BLITZ</h1>
     </div>
 
     <!-- Centered Waiting Content -->
-    <div class="card p-16 rounded-[4rem] w-full max-w-2xl text-center space-y-10 shadow-[0_0_80px_rgba(168,85,247,0.1)] border-white/10 relative overflow-hidden group">
+    <div class="card p-10 md:p-14 rounded-[3.5rem] w-full max-w-2xl text-center space-y-8 shadow-[0_0_80px_rgba(168,85,247,0.15)] border-white/10 relative overflow-hidden group">
         <div class="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-pink-600/10 opacity-50"></div>
         
-        <div class="relative space-y-8 animate-in fade-in zoom-in duration-700">
+        <div class="relative space-y-6 animate-in fade-in zoom-in duration-700">
             <!-- Pulsing Loading Indicator -->
-            <div class="w-32 h-32 bg-purple-600/20 rounded-full mx-auto flex items-center justify-center border border-white/20 animate-pulse">
-                <div class="w-24 h-24 bg-purple-500/40 rounded-full animate-ping opacity-50"></div>
-                <div class="absolute w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.8)]">
-                     <span class="text-white text-3xl font-black uppercase tracking-tighter italic">⚡</span>
+            <div class="w-28 h-28 bg-purple-600/20 rounded-full mx-auto flex items-center justify-center border border-white/20 animate-pulse relative">
+                <div class="w-20 h-20 bg-purple-500/40 rounded-full animate-ping opacity-50"></div>
+                <div class="absolute w-14 h-14 bg-purple-500 rounded-full flex items-center justify-center shadow-[0_0_30px_rgba(168,85,247,0.8)]">
+                     <span class="text-white text-2xl font-black uppercase tracking-tighter italic">⚡</span>
                 </div>
             </div>
 
-            <div class="space-y-4">
-                <h2 class="text-6xl font-black uppercase text-gradient italic tracking-tighter animate-pulse grow">WAITING FOR HOST...</h2>
-                <h3 class="text-3xl font-black uppercase tracking-tighter text-white">{{ $room->quiz->title }}</h3>
-                <p class="text-gray-500 font-black uppercase tracking-widest text-sm italic">Arena Code: <span class="text-purple-400 font-mono">{{ $room->room_code }}</span></p>
+            <div class="space-y-2">
+                <h2 class="text-4xl md:text-5xl font-black uppercase text-gradient italic tracking-tighter animate-pulse">WAITING FOR HOST...</h2>
+                <h3 class="text-2xl font-black uppercase tracking-tighter text-white">{{ $room->quiz->title }}</h3>
+                <p class="text-gray-400 font-black uppercase tracking-widest text-xs italic">Arena Code: <span class="text-purple-400 font-mono text-base">{{ $room->room_code }}</span></p>
             </div>
 
-            <div class="flex flex-col space-y-4">
-                <div class="bg-white/5 py-3 px-8 border border-white/10 rounded-2xl flex items-center justify-between">
-                    <span class="text-gray-400 font-black uppercase tracking-widest text-[9px]">Squad Size</span>
-                    <span class="text-white font-black italic text-sm" x-text="count + ' / ' + max"></span>
+            <!-- Stats Bar -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white/5 py-3 px-6 border border-white/10 rounded-2xl flex flex-col items-center justify-center">
+                    <span class="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Squad Size</span>
+                    <span class="text-white font-black italic text-lg" x-text="count + ' / ' + max"></span>
                 </div>
                 
-                <div class="py-3 px-8 border border-white/10 rounded-2xl flex items-center justify-between transition-all"
+                <div class="py-3 px-6 border border-white/10 rounded-2xl flex flex-col items-center justify-center transition-all"
                      :class="readyCount === totalCount && totalCount > 0 ? 'bg-green-500/10 border-green-500/30' : 'bg-white/5 border-white/10'">
-                    <span class="text-gray-400 font-black uppercase tracking-widest text-[9px]">Ready Count</span>
-                    <span class="font-black italic text-sm" 
-                          :class="readyCount === totalCount && totalCount > 0 ? 'text-green-500' : 'text-gray-600'"
+                    <span class="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1">Ready Count</span>
+                    <span class="font-black italic text-lg" 
+                          :class="readyCount === totalCount && totalCount > 0 ? 'text-green-400' : 'text-purple-400'"
                           x-text="readyCount + ' / ' + totalCount"></span>
                 </div>
             </div>
 
-            <div class="pt-8">
-                <p class="text-2xl font-black uppercase tracking-widest leading-none drop-shadow-lg"
-                   :class="readyCount === totalCount && totalCount > 0 ? 'text-green-500' : 'text-white'"
-                   x-text="readyCount === totalCount && totalCount > 0 ? 'ALL READY!' : 'YOU\'RE IN!'"></p>
-                <p class="text-gray-500 font-bold uppercase tracking-widest text-xs mt-4" x-text="readyCount === totalCount && totalCount > 0 ? 'Prepare for immediate launch.' : 'Get ready to compete. The battle is about to begin.'"></p>
+            <!-- Interactive Ready Up Button -->
+            <div class="pt-4">
+                <button @click="toggleReady()" 
+                        :disabled="isReady || markingReady"
+                        :class="isReady ? 'bg-green-600 border-green-400 text-white cursor-default shadow-[0_0_40px_rgba(34,197,94,0.4)]' : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white shadow-[0_0_50px_rgba(168,85,247,0.4)] hover:scale-105 active:scale-95 cursor-pointer'"
+                        class="w-full py-5 rounded-2xl font-black text-2xl tracking-tighter uppercase border transition-all duration-300 transform flex items-center justify-center space-x-3 select-none">
+                    <span x-show="!isReady && !markingReady">⚡ I'M READY!</span>
+                    <span x-show="markingReady" style="display:none;" class="flex items-center space-x-2">
+                        <svg class="animate-spin h-6 w-6 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <span>LOCKING IN...</span>
+                    </span>
+                    <span x-show="isReady" style="display:none;" class="flex items-center space-x-2">
+                        <span>✓ READY TO BLITZ!</span>
+                    </span>
+                </button>
+            </div>
+
+            <div class="pt-2">
+                <p class="text-lg font-black uppercase tracking-widest leading-none drop-shadow-lg"
+                   :class="isReady ? 'text-green-400' : 'text-white'"
+                   x-text="isReady ? 'READY TO BATTLE!' : 'YOU\'RE IN THE LOBBY!'"></p>
+                <p class="text-gray-400 font-bold uppercase tracking-widest text-[11px] mt-2" 
+                   x-text="isReady ? 'Waiting for host to start the game.' : 'Click I\'M READY above to lock in your readiness!'"></p>
             </div>
         </div>
     </div>

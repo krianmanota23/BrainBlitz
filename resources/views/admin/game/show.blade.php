@@ -146,76 +146,63 @@
     </div>
 
     <!-- RIGHT SIDE: ADMIN CONTROL AREA (30%) -->
-    <div class="w-[30%] bg-white/5 p-12 flex flex-col">
-        <div class="mb-12">
-            <h3 class="text-gray-500 font-black uppercase tracking-widest text-xs mb-4">Command Center</h3>
-            <div class="card p-8 rounded-3xl border-white/10 space-y-6 shadow-2xl">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest">Responses</p>
-                        <p class="text-4xl font-black italic tracking-tighter"><span x-text="votes.total"></span> <span class="text-gray-600 text-xl">/ <span x-text="totalParticipants"></span></span></p>
+    <div class="w-[30%] bg-white/5 p-6 flex flex-col justify-between overflow-y-auto">
+        <div class="space-y-4">
+            <div>
+                <h3 class="text-gray-400 font-black uppercase tracking-widest text-[10px] mb-2">Command Center</h3>
+                <div class="card p-4 rounded-2xl border-white/10 space-y-3 shadow-xl">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-[9px] font-black text-gray-500 uppercase tracking-widest">Responses</p>
+                            <p class="text-2xl font-black italic tracking-tighter text-white"><span x-text="votes.total"></span> <span class="text-gray-500 text-sm">/ <span x-text="totalParticipants"></span></span></p>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-2.5 py-1 bg-green-500/10 text-green-400 rounded-lg text-[9px] font-black uppercase tracking-widest border border-green-500/30">Stable</span>
+                        </div>
                     </div>
-                    <div class="text-right">
-                        <span class="px-3 py-1 bg-green-500/10 text-green-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-green-500/30">Stable</span>
+                    
+                    <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                        <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
+                             :style="`width: ${(votes.total / totalParticipants) * 100}%` "></div>
                     </div>
-                </div>
-                
-                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                    <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-500"
-                         :style="`width: ${(votes.total / totalParticipants) * 100}%` "></div>
                 </div>
             </div>
-        </div>
 
-        <!-- Dynamic Controls -->
-        <div class="flex-1 flex flex-col space-y-6">
-            <a href="{{ route('tv.game', $room->id) }}" target="_blank" class="w-full py-4 rounded-xl border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                Open TV Display
-            </a>
+            <!-- Dynamic Controls -->
+            <div class="space-y-4">
+                <a href="{{ route('tv.game', $room->id) }}" target="_blank" class="w-full py-3 rounded-xl border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center text-gray-300">
+                    <svg class="w-4 h-4 mr-2 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Open TV Display
+                </a>
 
-            <!-- Ready State Controls (Before first question) -->
-            <template x-if="viewState == 'ready_check' && currentQuestionNum == 0">
-                <div class="flex-1 flex flex-col items-center justify-center space-y-12 animate-in fade-in zoom-in duration-700">
-                    <div class="text-center space-y-6">
-                        <div id="all-ready-msg" class="hidden">
-                            <h2 class="text-6xl font-black uppercase text-green-500 italic tracking-tighter mb-4 shadow-green-500/20 drop-shadow-2xl animate-bounce">SQUAD LOCKED IN!</h2>
-                            <p class="text-white font-black uppercase tracking-[0.4em] text-sm opacity-50">All systems go. Initiate the blitz.</p>
-                        </div>
-                        
-                        <div x-show="!allReady" class="animate-pulse">
-                            <h2 class="text-5xl font-black uppercase text-purple-500/50 italic tracking-tighter mb-4">WAITING FOR SQUAD...</h2>
-                            <p class="text-gray-600 font-black uppercase tracking-[0.4em] text-sm">Students are syncing their gear</p>
-                        </div>
-                    </div>
-
-                    <div class="w-full max-w-xl space-y-6">
-                        <div class="card p-10 rounded-[2.5rem] border-white/10 bg-white/5 backdrop-blur-3xl text-center shadow-[0_0_100px_rgba(168,85,247,0.1)]">
-                            <p class="text-gray-500 font-black uppercase tracking-[0.3em] text-[10px] mb-4 italic">Synchronization Status</p>
-                            <p id="ready-count" class="text-7xl font-black italic tracking-tighter text-white drop-shadow-lg">
-                               0 / {{ $room->participants->count() }}
-                            </p>
-                            <p class="text-gray-500 font-black uppercase tracking-[0.2em] text-xs mt-4">PLAYERS READY</p>
+                <!-- Ready State Controls (Before first question) -->
+                <template x-if="viewState == 'ready_check' && currentQuestionNum == 0">
+                    <div class="space-y-4 animate-in fade-in zoom-in duration-500">
+                        <div class="card p-4 rounded-2xl border-white/10 bg-white/5 text-center shadow-lg">
+                            <p class="text-gray-400 font-black uppercase tracking-widest text-[9px] mb-1 italic">Synchronization Status</p>
+                            <div class="flex items-center justify-center space-x-2">
+                                <span id="ready-count" class="text-4xl font-black italic tracking-tighter text-white drop-shadow-md">
+                                   0 / {{ $room->participants->count() }}
+                                </span>
+                                <span class="text-xs font-black uppercase tracking-widest text-purple-400">READY</span>
+                            </div>
                         </div>
 
                         <button 
                             id="start-first-question-btn"
                             @click="startFirstQuestion()"
                             disabled
-                            class="opacity-50 w-full py-8 rounded-[2rem] font-black text-4xl tracking-tighter uppercase shadow-2xl transition-all duration-500 border-4 border-transparent
-                                   bg-gray-800 text-gray-500 cursor-not-allowed transform hover:scale-[1.02]">
-                            WAITING...
+                            class="opacity-50 w-full py-4 rounded-xl font-black text-xl tracking-tighter uppercase shadow-xl transition-all duration-300 border-2 border-transparent
+                                   bg-gray-800 text-gray-500 cursor-not-allowed">
+                            WAITING FOR SQUAD...
                         </button>
 
-                        <div class="flex justify-center">
-                            <button @click="if(confirm('Not all players are ready. Force start anyway?')) startFirstQuestion()" 
-                                    class="px-8 py-3 rounded-xl border border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[9px] text-gray-600 hover:text-white transition-all italic">
-                                &times; Force Start System &times;
-                            </button>
-                        </div>
+                        <button @click="if(confirm('Not all players are ready. Force start anyway?')) startFirstQuestion()" 
+                                class="w-full py-3 rounded-xl bg-red-600/20 hover:bg-red-600 border border-red-500/50 text-red-400 hover:text-white font-black uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center space-x-2">
+                            <span>⚠️ FORCE START SYSTEM</span>
+                        </button>
                     </div>
-                </div>
-            </template>
+                </template>
 
             <template x-if="(viewState == 'waiting' || viewState == 'ended') && currentQuestionNum > 0">
                 <button @click="nextQuestion()" 
@@ -500,7 +487,7 @@ function gameEngine() {
                         'Content-Type': 'application/json'
                     }
                 });
-                window.location.href = '{{ route('admin.quizzes.index') }}'; // Or results page
+                window.location.href = '{{ route('admin.rooms.results', $room->id) }}';
             } catch (e) { console.error(e); }
         },
 
@@ -511,7 +498,9 @@ function gameEngine() {
                 if(this.timer > 0) this.timer--;
                 else {
                     clearInterval(this.timerInterval);
-                    // We don't auto-end, just show 0
+                    if (this.viewState === 'active') {
+                        this.endQuestion();
+                    }
                 }
             }, 1000);
         },

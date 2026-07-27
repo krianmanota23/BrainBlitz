@@ -58,7 +58,7 @@ class QuizController extends Controller
 
     public function show($id)
     {
-        $quiz = Quiz::with(['topics', 'questions.options', 'questions.topic'])->findOrFail($id);
+        $quiz = Quiz::withCount('questions')->with(['topics', 'questions.options', 'questions.topic'])->findOrFail($id);
         return view('admin.quizzes.show', compact('quiz'));
     }
 

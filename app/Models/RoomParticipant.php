@@ -9,6 +9,11 @@ class RoomParticipant extends Model
 {
     protected $fillable = ['room_id', 'user_id', 'joined_at', 'is_ready'];
 
+    protected $casts = [
+        'joined_at' => 'datetime',
+        'is_ready' => 'boolean',
+    ];
+
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);

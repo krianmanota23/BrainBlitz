@@ -47,8 +47,9 @@
                 <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-[#1a1a2e] border border-white/10 rounded-full z-20 text-[9px] font-black uppercase text-gray-400 tracking-widest italic select-none">
                     ROOM CODE
                 </div>
-                <input type="text" name="room_code" x-model="code" maxlength="6"
-                    x-on:input="$event.target.value = $event.target.value.toUpperCase(); code = $event.target.value"
+                <input type="text" name="room_code" x-model="code" maxlength="12"
+                    x-on:paste="setTimeout(() => { let v = $event.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6); $event.target.value = v; code = v; }, 10)"
+                    x-on:input="let v = $event.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6); $event.target.value = v; code = v;"
                     class="w-full bg-white/5 border-2 border-white/10 rounded-[2.5rem] px-8 py-10 focus:ring-4 focus:ring-purple-500/30 focus:border-purple-500 text-center text-6xl font-mono font-black tracking-[0.4em] uppercase placeholder-white/10 outline-none transition-all shadow-inner text-white" 
                     placeholder="______" required autocomplete="off" spellcheck="false" inputmode="text" 
                     autofocus>
